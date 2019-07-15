@@ -15,6 +15,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
 from datetime import datetime, timedelta
+from requests import get
 from pyramid.settings import asbool, falsey
 from pyramid_duh.settings import asdict
 from six.moves.urllib.parse import urlparse, quote  # pylint: disable=F0401,E0611
@@ -78,23 +79,46 @@ class S3Storage(ObjectStoreStorage):
                 return False
             else:
                 return str(val)
-
-        s3conn = boto3.resource(
-            "s3",
-            config=config,
-            **get_settings(
-                settings,
-                "storage.",
-                region_name=str,
-                api_version=str,
-                use_ssl=asbool,
-                verify=verify_value,
-                endpoint_url=str,
-                aws_access_key_id=str,
-                aws_secret_access_key=str,
-                aws_session_token=str,
+        try:
+            s3conn = boto3.resource(
+                "s3",
+                config=config,
+                **get_settings(
+                    settings,
+                    "storage.",
+                    region_name=str,
+                    api_version=str,
+                    use_ssl=asbool,
+                    verify=verify_value,
+                    endpoint_url=str,
+                    aws_access_key_id=str,
+                    aws_secret_access_key=str,
+                    aws_session_token=str,
+                )
             )
-        )
+        except botocore.exceptions.NoCredentialsError as err:
+           response = get(
+               "http://169.254.169.254/latest/meta-data/iam/info"
+           ) 
+
+           if response.status_code == 200:
+            print("IAM role found. Falling back to EC2 IAM Role")
+            s3conn = boto3.resource(
+                    "s3",
+                    config=config,
+                    **get_settings(
+                        settings,
+                        "storage.",
+                        region_name=str,
+                        api_version=str,
+                        use_ssl=asbool,
+                        verify=verify_value,
+                        endpoint_url=str,
+                        aws_session_token=str,
+                    )
+                )
+           else: 
+            print("Credentials not found.")
 
         bucket = s3conn.Bucket(bucket_name)
         try:
