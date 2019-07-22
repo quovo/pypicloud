@@ -97,28 +97,25 @@ class S3Storage(ObjectStoreStorage):
                 )
             )
         except botocore.exceptions.NoCredentialsError as err:
-           response = get(
-               "http://169.254.169.254/latest/meta-data/iam/info"
-           ) 
-
-           if response.status_code == 200:
-            print("IAM role found. Falling back to EC2 IAM Role")
-            s3conn = boto3.resource(
-                    "s3",
-                    config=config,
-                    **get_settings(
-                        settings,
-                        "storage.",
-                        region_name=str,
-                        api_version=str,
-                        use_ssl=asbool,
-                        verify=verify_value,
-                        endpoint_url=str,
-                        aws_session_token=str,
+            print("Initializing session with instance profile")
+            try:
+                s3conn = boto3.resource(
+                        "s3",
+                        config=config,
+                        **get_settings(
+                            settings,
+                            "storage.",
+                            region_name=str,
+                            api_version=str,
+                            use_ssl=asbool,
+                            verify=verify_value,
+                            endpoint_url=str,
+                            aws_session_token=str,
+                        )
                     )
-                )
-           else: 
-            print("Credentials not found.")
+            except botocore.exceptions.NoCredentialsError as err:
+                print("Unable to authenticate to S3. Please add AWS Access tokens or Instance Profile")
+                raise 
 
         bucket = s3conn.Bucket(bucket_name)
         try:
