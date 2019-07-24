@@ -12,6 +12,7 @@ RUN apt-get update -qq \
   && DEBIAN_FRONTEND=noninteractive apt-get install -qy python3-pip \
      python3-dev libldap2-dev libsasl2-dev default-libmysqlclient-dev libffi-dev libssl-dev \
   && pip3 install -e . \
+  && pip3 install -e .[ldap] \
   && pip3 install requests uwsgi \
      pastescript mysqlclient psycopg2-binary redis \
   # Create the pypicloud user
