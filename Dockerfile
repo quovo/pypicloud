@@ -36,4 +36,4 @@ ADD make-config.sh /usr/local/bin/make-config
 # user to run as
 ENV UWSGI_USER pypicloud
 
-CMD ["uwsgi", "--die-on-term", "/etc/pypicloud/config.ini"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
