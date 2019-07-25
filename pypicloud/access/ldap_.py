@@ -105,6 +105,12 @@ class LDAP(object):
         """ Initializes the python-ldap module and does the initial bind """
         if self._ignore_cert:
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+        else: 
+            cert = '/usr/local/share/ca-certificates/ldap_ca_pem.crt'
+            ldap.protocol_version=ldap.VERSION3
+            ldap.set_option(ldap.OPT_X_TLS_NEWCTX,ldap.OPT_X_TLS_DEMAND)
+            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT,ldap.OPT_X_TLS_DEMAND)
+            ldap.set_option(ldap.OPT_X_TLS_CACERTFILE,cert)
         if self._ignore_referrals:
             ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
         LOG.debug("LDAP connecting to %s", self._url)
