@@ -1,4 +1,0 @@
--e .[test,lint,server,doc]
-bumpversion
-tox
-wheel
