@@ -1,20 +1,22 @@
 FROM 492865049799.dkr.ecr.us-east-1.amazonaws.com/quovo-python3:1.0.1
 
-RUN mkdir -p /data/packages \
-    && useradd pypiserver -r -d /data/packages \
+RUN addgroup --system --gid 9898 pypiserver \
+    && adduser --system -u 9898 --gid 9898 pypiserver \
+    && mkdir -p /data/packages \
+    && touch /data/htaccess \ 
     && chown -R pypiserver:pypiserver /data/packages \
-    # Set the setgid bit so anything added here gets associated with the
-    # pypiserver group
-    && chmod g+s /data/packages 
+    && chmod -R 760 /data/packages
 
 RUN apt-get update -qq \
     && apt-get install -y python3-pip \ 
-    && pip3 install pypiserver
+    && pip3 install pypiserver passlib
+
+ADD ./entrypoint.sh /data/entrypoint.sh
+RUN chmod ug+x /data/entrypoint.sh 
 
 EXPOSE 8080
-VOLUME /data/packages
 USER pypiserver
+VOLUME /data/packages
 WORKDIR /data 
 
-ENTRYPOINT ["pypi-server", "-p", "8080"]
-CMD ["packages"]
+CMD ["/data/entrypoint.sh"]
